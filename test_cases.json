@@ -40,5 +40,47 @@
     "expected_result": "Emergency deflation valve triggers immediately, venting cuff pressure within 2 seconds.",
     "generation_method": "rule-based-fallback",
     "created_at": "2026-10-23T14:05:48.492605"
+  },
+  {
+    "test_id": "6305b9a3",
+    "selection_id": 1,
+    "source_node_id": 57,
+    "logical_id": "1.1",
+    "section_number": "1.1",
+    "source_heading": "Intended Use",
+    "source_version": "v1",
+    "source_hash": "cf5820ef036bd846363dd4bb638e9289e5ff944b47a61856ae92abcc9b2b7c0d",
+    "test_case": "[RULE-BASED FALLBACK] Verify intended use and arm circumference constraints for Section 1.1 (Intended Use): Mount device on testing arm manikins with circumferences of 21 cm, 28 cm, and 43 cm. Execute standard measurement sequence and verify user manual guidance compliance.",
+    "expected_result": "Device operates reliably within rated 22-42 cm range and flags out-of-range arm circumference safely.",
+    "generation_method": "rule-based-fallback",
+    "created_at": "2026-10-23T14:12:12.097108"
+  },
+  {
+    "test_id": "bd3d1c9b",
+    "selection_id": 1,
+    "source_node_id": 65,
+    "logical_id": "3.2",
+    "section_number": "3.2",
+    "source_heading": "Cuff Inflation Sequence",
+    "source_version": "v1",
+    "source_hash": "d96ca6eb7671c226fe8e1320b74815d69ff5f39cc27f02429cb5e0616b3075ad",
+    "test_case": "[RULE-BASED FALLBACK] Verify cuff inflation sequence for Section 3.2 (Cuff Inflation Sequence): Connect CT-200 to blood pressure simulator configured with no pulse signal at 180 mmHg. Initiate measurement cycle and record digital pressure gauge increments up to 299 mmHg.",
+    "expected_result": "Device inflates in 40 mmHg increments above 180 mmHg up to max 299 mmHg before safely aborting.",
+    "generation_method": "rule-based-fallback",
+    "created_at": "2026-10-23T14:12:12.097108"
+  },
+  {
+    "test_id": "e53fae8f",
+    "selection_id": 1,
+    "source_node_id": 69,
+    "logical_id": "4.1",
+    "section_number": "4.1",
+    "source_heading": "Overpressure Protection",
+    "source_version": "v1",
+    "source_hash": "3dfcb1e8cecfa6fe461f669913bc2d37eb58afc5156faeddcbfe09e77edbd630",
+    "test_case": "[RULE-BASED FALLBACK] Verify overpressure protection for Section 4.1 (Overpressure Protection): Apply artificial pressure exceeding 299 mmHg directly to the cuff port during inflation. Measure elapsed time until emergency deflation valve triggers.",
+    "expected_result": "Emergency deflation valve triggers immediately, venting cuff pressure within 2 seconds.",
+    "generation_method": "rule-based-fallback",
+    "created_at": "2026-10-23T14:12:12.097108"
   }
 ]
