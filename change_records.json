@@ -1,0 +1,47 @@
+[
+    {
+        "section_number": "5.3",
+        "section_title": "Data Export",
+        "version_old": "v1",
+        "version_new": "v2",
+        "change_type": "added",
+        "old_content": null,
+        "new_content": "Starting with firmware 1.4, the companion app supports exporting stored readings as a CSV file containing timestamp, profile, systolic, diastolic, pulse, and classification columns. Export requires the device to have completed at least one successful Bluetooth sync in the current session."
+    },
+    {
+        "section_number": "2.1.1.1",
+        "section_title": "Battery Life Under Typical Use",
+        "version_old": "v1",
+        "version_new": "v2",
+        "change_type": "modified",
+        "old_content": "Battery Life Under Typical Use Under typical use (three measurements per day), four AA alkaline batteries provide approximately 300 measurement cycles before requiring replacement. The device displays a low‐battery icon once remaining capacity falls below 15%.",
+        "new_content": "Battery Life Under Typical Use Under typical use (three measurements per day), four AA alkaline batteries provide approximately 250 measurement cycles before requiring replacement — revised downward from earlier estimates after extended field testing. The device displays a low‐battery icon once remaining capacity falls below 10%."
+    },
+    {
+        "section_number": "3.2",
+        "section_title": "Cuff Inflation Sequence",
+        "version_old": "v1",
+        "version_new": "v2",
+        "change_type": "modified",
+        "old_content": "Cuff Inflation Sequence On starting a measurement, the device inflates the cuff to an initial target of 180 mmHg. If the user's pulse is not detected by 180 mmHg, the device inflates in 40 mmHg increments up to a maximum of 299 mmHg before aborting with an error. Deflation occurs in controlled steps of approximately 3 mmHg to capture oscillometric pulse data.",
+        "new_content": "Cuff Inflation Sequence On starting a measurement, the device inflates the cuff to an initial target of 180 mmHg. If the user's pulse is not detected by 180 mmHg, the device inflates in 30 mmHg increments up to a maximum of 299 mmHg before aborting with an error. Deflation occurs in controlled steps of approximately 3 mmHg to capture oscillometric pulse data. Increment size was reduced from the original 40 mmHg to improve pulse-detection reliability in field testing."
+    },
+    {
+        "section_number": "4.2",
+        "section_title": "Error Codes",
+        "version_old": "v1",
+        "version_new": "v2",
+        "change_type": "modified",
+        "old_content": "Error Codes Code Meaning Device Behavior E1 Cuff not connected or leak detected Aborts measurement, displays E1 E2 Motion artifact detected during measurement Aborts measurement, displays E2, prompts retry E3 Overpressure condition Auto-deflates within 2 seconds, displays E3 E4 Low battery during measurement Aborts measurement, displays E4 E5 Internal sensor fault Device disables measurement function, displays E5 until serviced",
+        "new_content": "Error Codes Code Meaning Device Behavior E1 Cuff not connected or leak detected Aborts measurement, displays E1 E2 Motion artifact detected during measurement Aborts measurement, displays E2, prompts retry E3 Overpressure condition Auto-deflates within 1.5 seconds, displays E3 E4 Low battery during measurement Aborts measurement, displays E4 E5 Internal sensor fault Device disables measurement function, displays E5 until serviced E6 Bluetooth sync failure Displays E6 on next sync attempt; does not affect measurement"
+    },
+    {
+        "section_number": "4.3",
+        "section_title": "Alarm Thresholds",
+        "version_old": "v1",
+        "version_new": "v2",
+        "change_type": "modified",
+        "old_content": "Alarm Thresholds The device does not sound an audible alarm for elevated readings by default; audible alarms are limited to the E1–E5 error conditions above and are user‐configurable in the settings menu, except for E3 (overpressure), which cannot be silenced for safety reasons.",
+        "new_content": "Alarm Thresholds The device does not sound an audible alarm for elevated readings by default; audible alarms are limited to the E1–E6 error conditions above and are user‐configurable in the settings menu, except for E3 (overpressure), which cannot be silenced for safety reasons."
+    }
+]

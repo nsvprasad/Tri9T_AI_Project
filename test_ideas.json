@@ -1,0 +1,42 @@
+[
+    {
+        "section_number": "5.3",
+        "source_heading": "Data Export",
+        "source_version": "v2",
+        "source_hash": "68b20ec882fa18ab9577984c930fa9e97225cc4d37b79a2963931f1c2f275f67",
+        "test_idea": "Complete a successful Bluetooth sync between a device on firmware 1.4 and the companion app in the current session, then trigger the stored readings export to CSV.",
+        "expected_result": "The companion app exports a CSV file containing columns for timestamp, profile, systolic, diastolic, pulse, and classification."
+    },
+    {
+        "section_number": "2.1.1.1",
+        "source_heading": "Battery Life Under Typical Use",
+        "source_version": "v2",
+        "source_hash": "489a067d030bd2263fa1d6ec6170a2c03687510027c8a105141ef11f2ae16c59",
+        "test_idea": "Gradually decrease the device's battery capacity and observe the display to verify the exact threshold at which the low-battery indicator appears.",
+        "expected_result": "The device displays the low-battery icon once remaining capacity falls below 10%."
+    },
+    {
+        "section_number": "3.2",
+        "source_heading": "Cuff Inflation Sequence",
+        "source_version": "v2",
+        "source_hash": "c15d6d663cc19cbd835fed30a57a8d13a3f61835f803a360d87bf9eb46a78074",
+        "test_idea": "Start a measurement on a test simulator set to not emit a pulse signal by 180 mmHg, and record the cuff pressure progression beyond the initial target.",
+        "expected_result": "The cuff pressure increases in increments of 30 mmHg above 180 mmHg up to a maximum of 299 mmHg before aborting with an error."
+    },
+    {
+        "section_number": "4.2",
+        "source_heading": "Error Codes",
+        "source_version": "v2",
+        "source_hash": "089921001db674e9d53d04d48d517b5d98d0070fb483f0ec09cafce6e402e05c",
+        "test_idea": "Trigger an overpressure condition during a measurement and measure the elapsed time until cuff deflation while verifying the displayed error code.",
+        "expected_result": "The device auto-deflates within 1.5 seconds and displays E3."
+    },
+    {
+        "section_number": "4.3",
+        "source_heading": "Alarm Thresholds",
+        "source_version": "v2",
+        "source_hash": "bd1aa790f1ffd46639a6b963b68ca666638a39f887b15d4d7a1d6596eb5e1e94",
+        "test_idea": "Trigger error condition E6 and check the settings menu to verify that an audible alarm sounds for E6 and that its audible alarm can be configured by the user.",
+        "expected_result": "Error condition E6 produces an audible alarm, and the audible alarm for E6 is user-configurable in the settings menu."
+    }
+]

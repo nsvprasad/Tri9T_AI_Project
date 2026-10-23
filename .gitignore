@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local package environment
+packages/
+.dist/
+
+# SQLite databases & backups
+*.db.bak
+*.bak
+*.tmp
+
+# Environment variables & secrets
+.env
+*.env
+.env.*
+
+# Temporary extraction files
+v1_dump.txt
+v2_dump.txt
+v1_text.txt
+v2_text.txt
+layout_v1.txt
+scratch_inspect.py
