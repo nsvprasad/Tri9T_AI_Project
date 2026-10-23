@@ -1,38 +1,51 @@
-
+import sys
 import json
 import hashlib
+from pathlib import Path
 
-def calculate_hash(text):
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+PROJECT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT_DIR / "packages"))
+sys.path.insert(0, str(PROJECT_DIR))
 
-# Load the QA test ideas
-with open("test_ideas.json", "r", encoding="utf-8") as file:
-    test_ideas = json.load(file)
+from database import SessionLocal
+from staleness_service import evaluate_all_tests
+from test_case_store import TestCaseStore
 
-# Load the recorded manual changes
-with open("change_records.json", "r", encoding="utf-8") as file:
-    changes = json.load(file)
+def main():
+    store = TestCaseStore()
+    cases = store.load_all()
 
-# Build a lookup of the latest section content
-latest_sections = {}
+    if not cases:
+        # Fallback to test_ideas.json if test_cases.json is empty
+        legacy_file = PROJECT_DIR / "test_ideas.json"
+        if legacy_file.exists():
+            with open(legacy_file, "r", encoding="utf-8") as f:
+                cases = json.load(f)
 
-for change in changes:
-    section_number = change["section_number"]
-    latest_content = change.get("new_content") or ""
-    latest_sections[section_number] = calculate_hash(latest_content)
+    if not cases:
+        print("No test cases found to evaluate.")
+        return
 
-# Compare each test's saved fingerprint with the latest fingerprint
-for test in test_ideas:
-    section_number = test["section_number"]
-    saved_hash = test.get("source_hash")
-    latest_hash = latest_sections.get(section_number)
+    db = SessionLocal()
+    try:
+        evaluated = evaluate_all_tests(cases, db)
+        print("=" * 70)
+        print("REAL DATABASE-BACKED QA TEST STALENESS REPORT")
+        print("=" * 70)
+        for item in evaluated:
+            sec = item.get("section_number")
+            heading = item.get("source_heading") or "Unknown"
+            status = item.get("status")
+            reason = item.get("staleness_reason")
+            print(f"[{status:7}] Section {sec:<7} ({heading}): {reason}")
 
-    if latest_hash is None:
-        status = "UNKNOWN - source section not found"
-    elif saved_hash == latest_hash:
-        status = "CURRENT"
-    else:
-        status = "STALE - review this test"
+        current_count = sum(1 for t in evaluated if t["status"] == "CURRENT")
+        stale_count = sum(1 for t in evaluated if t["status"] == "STALE")
+        unknown_count = sum(1 for t in evaluated if t["status"] == "UNKNOWN")
+        print("=" * 70)
+        print(f"Summary: Total: {len(evaluated)} | CURRENT: {current_count} | STALE: {stale_count} | UNKNOWN: {unknown_count}")
+    finally:
+        db.close()
 
-    print(f"Section {section_number}: {status}")
-
+if __name__ == "__main__":
+    main()
