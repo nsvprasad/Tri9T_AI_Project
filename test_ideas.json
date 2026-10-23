@@ -1,50 +1,56 @@
 [
   {
-    "section_number": "1.1",
-    "source_heading": "Intended Use",
+    "section_number": "3.2",
+    "source_heading": "Cuff Inflation Sequence",
     "source_version": "v1",
-    "source_hash": "cf5820ef036bd846363dd4bb638e9289e5ff944b47a61856ae92abcc9b2b7c0d",
-    "test_idea": "[RULE-BASED FALLBACK] Verify intended use and arm circumference constraints for Section 1.1 (Intended Use): Mount device on testing arm manikins with circumferences of 21 cm, 28 cm, and 43 cm. Execute standard measurement sequence and verify user manual guidance compliance.",
-    "expected_result": "Device operates reliably within rated 22-42 cm range and flags out-of-range arm circumference safely."
+    "source_hash": "d96ca6eb7671c226fe8e1320b74815d69ff5f39cc27f02429cb5e0616b3075ad",
+    "scenario": "Section 3.2 - Nominal Cuff Inflation and Step Deflation",
+    "test_idea": "Initiate a standard measurement sequence on a test simulator, observe the initial cuff inflation phase, and monitor the controlled deflation steps.",
+    "expected_result": "The device successfully inflates the cuff to the initial target of 180 mmHg and deflates in controlled steps of approximately 3 mmHg to capture oscillometric data."
   },
   {
     "section_number": "3.2",
     "source_heading": "Cuff Inflation Sequence",
     "source_version": "v1",
     "source_hash": "d96ca6eb7671c226fe8e1320b74815d69ff5f39cc27f02429cb5e0616b3075ad",
-    "test_idea": "[RULE-BASED FALLBACK] Verify cuff inflation sequence for Section 3.2 (Cuff Inflation Sequence): Connect CT-200 to blood pressure simulator configured with no pulse signal at 180 mmHg. Initiate measurement cycle and record digital pressure gauge increments up to 299 mmHg.",
-    "expected_result": "Device inflates in 40 mmHg increments above 180 mmHg up to max 299 mmHg before safely aborting."
-  },
-  {
-    "section_number": "4.1",
-    "source_heading": "Overpressure Protection",
-    "source_version": "v1",
-    "source_hash": "3dfcb1e8cecfa6fe461f669913bc2d37eb58afc5156faeddcbfe09e77edbd630",
-    "test_idea": "[RULE-BASED FALLBACK] Verify overpressure protection for Section 4.1 (Overpressure Protection): Apply artificial pressure exceeding 299 mmHg directly to the cuff port during inflation. Measure elapsed time until emergency deflation valve triggers.",
-    "expected_result": "Emergency deflation valve triggers immediately, venting cuff pressure within 2 seconds."
-  },
-  {
-    "section_number": "1.1",
-    "source_heading": "Intended Use",
-    "source_version": "v1",
-    "source_hash": "cf5820ef036bd846363dd4bb638e9289e5ff944b47a61856ae92abcc9b2b7c0d",
-    "test_idea": "[RULE-BASED FALLBACK] Verify intended use and arm circumference constraints for Section 1.1 (Intended Use): Mount device on testing arm manikins with circumferences of 21 cm, 28 cm, and 43 cm. Execute standard measurement sequence and verify user manual guidance compliance.",
-    "expected_result": "Device operates reliably within rated 22-42 cm range and flags out-of-range arm circumference safely."
+    "scenario": "Section 3.2 - Incremental Inflation Beyond Initial Target",
+    "test_idea": "Configure the simulator to suppress pulse detection until the initial target of 180 mmHg is reached, and monitor the subsequent pressure adjustment steps.",
+    "expected_result": "The device detects no pulse at 180 mmHg and correctly executes an inflation increment of 40 mmHg to continue searching for the pulse."
   },
   {
     "section_number": "3.2",
     "source_heading": "Cuff Inflation Sequence",
     "source_version": "v1",
     "source_hash": "d96ca6eb7671c226fe8e1320b74815d69ff5f39cc27f02429cb5e0616b3075ad",
-    "test_idea": "[RULE-BASED FALLBACK] Verify cuff inflation sequence for Section 3.2 (Cuff Inflation Sequence): Connect CT-200 to blood pressure simulator configured with no pulse signal at 180 mmHg. Initiate measurement cycle and record digital pressure gauge increments up to 299 mmHg.",
-    "expected_result": "Device inflates in 40 mmHg increments above 180 mmHg up to max 299 mmHg before safely aborting."
+    "scenario": "Section 3.2 - Maximum Pressure Limit Abort",
+    "test_idea": "Configure the patient simulator to completely withhold pulse detection throughout the entire measurement cycle up to the highest possible inflation limit.",
+    "expected_result": "The device reaches the maximum threshold of 299 mmHg in increments without detecting a pulse and aborts the measurement process with an error."
+  },
+  {
+    "section_number": "1.1",
+    "source_heading": "Intended Use",
+    "source_version": "v1",
+    "source_hash": "cf5820ef036bd846363dd4bb638e9289e5ff944b47a61856ae92abcc9b2b7c0d",
+    "scenario": "Section 1.1 - Nominal Adult Arm Circumference Verification",
+    "test_idea": "Fit the CT-200 cuff to an adult patient simulator with an arm circumference of 28 cm. Initiate measurement and verify reading acquisition.",
+    "expected_result": "The device successfully acquires systolic, diastolic, and pulse rate readings without sizing errors."
+  },
+  {
+    "section_number": "3.2",
+    "source_heading": "Cuff Inflation Sequence",
+    "source_version": "v1",
+    "source_hash": "d96ca6eb7671c226fe8e1320b74815d69ff5f39cc27f02429cb5e0616b3075ad",
+    "scenario": "Section 3.2 - Nominal Cuff Inflation and Pulse Acquisition",
+    "test_idea": "Connect the CT-200 to a patient simulator with normal pulse signal detectable below 180 mmHg. Power on the device, select User Profile 1, and press Start. Observe the initial inflation phase and pressure gauge reading.",
+    "expected_result": "The cuff inflates smoothly to the initial target of 180 mmHg, acquires oscillometric pulse data, and initiates controlled deflation in steps of approximately 3 mmHg to complete the reading."
   },
   {
     "section_number": "4.1",
     "source_heading": "Overpressure Protection",
     "source_version": "v1",
     "source_hash": "3dfcb1e8cecfa6fe461f669913bc2d37eb58afc5156faeddcbfe09e77edbd630",
-    "test_idea": "[RULE-BASED FALLBACK] Verify overpressure protection for Section 4.1 (Overpressure Protection): Apply artificial pressure exceeding 299 mmHg directly to the cuff port during inflation. Measure elapsed time until emergency deflation valve triggers.",
-    "expected_result": "Emergency deflation valve triggers immediately, venting cuff pressure within 2 seconds."
+    "scenario": "Section 4.1 - Normal Operating Envelope Inflation",
+    "test_idea": "Execute standard inflation cycle on a test subject with systolic pressure below 250 mmHg. Monitor emergency valve status during inflation.",
+    "expected_result": "Emergency deflation valve remains securely closed throughout nominal inflation below 299 mmHg."
   }
 ]
