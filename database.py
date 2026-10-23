@@ -1,15 +1,15 @@
-
 import sys
+from pathlib import Path
 
 # Tell Python where our installed packages are located
-sys.path.insert(0, r"D:\Tri9T_AI_Project\packages")
+PROJECT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT_DIR / "packages"))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-
 # Location of our SQLite database file
-DATABASE_URL = "sqlite:///tri9t.db"
+DATABASE_URL = f"sqlite:///{PROJECT_DIR / 'tri9t.db'}"
 
 # Create the database connection
 engine = create_engine(
@@ -31,7 +31,6 @@ Base = declarative_base()
 def get_db():
     """Create a database session and close it afterward."""
     db = SessionLocal()
-
     try:
         yield db
     finally:
