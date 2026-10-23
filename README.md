@@ -1,263 +1,272 @@
 # Tri9T AI — Versioned CT-200 Manual Intelligence System
 
-A production-grade backend API and automated pipeline for hierarchical PDF ingestion, version comparison, version-pinned test selections, Gemini LLM test-case generation, and dynamic requirement staleness detection for the **CardioTrack CT-200 Home Blood Pressure Monitor**.
+A Python backend that ingests two versions of the CardioTrack CT-200 manual, builds a hierarchical section tree, compares document versions, saves version-pinned selections, generates QA test-case ideas, and reports whether saved test cases are current or stale.
 
----
+Repository: https://github.com/nsvprasad/Tri9T_AI_Project
 
-## 1. System Overview & Key Capabilities
+## 1. What the system does
 
-- **Hierarchical PDF Parsing:** Extracts document titles, multi-level headings, body paragraphs, and specifications from technical manuals using PyMuPDF. Correctly resolves real-world document irregularities (duplicate headings, missing parent levels, out-of-order sections, and numbered lists).
-- **Multi-Version Document Storage:** Concurrently stores manual versions `v1` and `v2` in SQLite without destroying historical records.
-- **Node Matching & Change Detection:** Tracks logical requirements across versions, classifying sections as `UNCHANGED`, `MODIFIED`, `ADDED`, or `REMOVED` with unified text diffs.
-- **Named, Version-Pinned Selections:** Allows QA engineers to snapshot specific requirements against an exact manual version, guaranteeing that future manual updates do not silently alter the selection's baseline text.
-- **Gemini-Powered QA Test Generation:** Generates 3–5 concrete, executable QA verification procedures from pinned requirements, complete with strict Pydantic validation and a deterministic, domain-specific rule fallback.
-- **Dynamic Staleness Detection:** Real-time retrieval calculation comparing test-case fingerprints against the latest database version (`CURRENT`, `STALE`, `UNKNOWN`), while preserving validity for the original pinned revision.
+- **PDF ingestion:** extracts headings and body text from the supplied CT-200 PDFs.
+- **Hierarchical structure:** stores section numbers, headings, nesting levels, parent/child relationships, display order, and content hashes.
+- **Version comparison:** stores v1 and v2 separately and identifies sections as unchanged, modified, added, or removed using the implemented logical section matching and hashes.
+- **Version-pinned selections:** saves the exact section content and hash used when a named selection is created.
+- **QA test generation:** attempts structured Gemini output when configured; otherwise, or if generation fails validation, uses the rule-based fallback.
+- **Retrieval-time staleness:** checks stored test cases against the latest manual and reports `CURRENT`, `STALE`, or `UNKNOWN`.
+- **API:** exposes browsing, searching, comparison, selection, generation, and test retrieval endpoints through FastAPI.
 
----
+## 2. Workflow
 
-## 2. Technology Stack
+```text
+CT-200 manual PDFs (v1 and v2)
+            |
+            v
+       PDF parser
+            |
+            v
+Hierarchical sections + SHA-256 hashes
+            |
+            v
+    SQLite / SQLAlchemy
+            |
+      +-----+----------------+
+      |                      |
+      v                      v
+Version comparison     Named selection
+                             |
+                             v
+                 Pinned section text + hashes
+                             |
+                             v
+                   QA test-case generation
+                    Gemini or rule fallback
+                             |
+                             v
+                   test_cases.json (JSON)
+                             |
+                             v
+                  Retrieval-time staleness
+                             |
+                             v
+                 FastAPI responses / Swagger UI
+```
 
-- **Operating System:** Windows 10/11
-- **Language:** Python 3.11
-- **Web Framework:** FastAPI + Uvicorn
-- **ORM & Database:** SQLAlchemy + SQLite (`tri9t.db`)
-- **Schema Validation:** Pydantic v2
-- **PDF Extraction:** PyMuPDF (`fitz`)
-- **LLM Provider:** Google GenAI (`gemini-3.8-flash`) with bounded retry and rule-based fallback
-- **Dependencies Location:** Local `D:\Tri9T_AI_Project\packages` directory
-
----
-
-## 3. Project Directory Structure
+## 3. Project structure
 
 ```text
 Tri9T_AI_Project/
 ├── data/
-│   ├── ct200_manual.pdf            # Authoritative CT-200 v1 manual
-│   └── ct200_manual_v2.pdf         # Revised CT-200 v2 manual
-├── packages/                       # Local Python 3.11 wheel packages
-├── database.py                     # SQLAlchemy database configuration
-├── models.py                       # SQLAlchemy models: ManualVersion, ManualSection, Selection
-├── pdf_parser.py                   # Layout-aware parser handling PDF irregularities
-├── ingest_manuals.py               # Repeatable manual ingestion pipeline
-├── test_case_store.py              # Atomic JSON store for generated QA test records
-├── test_generator.py               # Gemini generation with validation & fallback
-├── staleness_service.py            # Live database staleness calculation engine
-├── main.py                         # FastAPI application and REST endpoints
-├── test_irregularities.py          # Automated unit tests for 4 PDF irregularities
-├── test_end_to_end.py              # Full 12-step end-to-end integration test suite
-├── check_stale_tests.py            # CLI tool for database-backed staleness reporting
-├── decision_log.md                 # Mandatory engineering decision and trade-off log
-├── APPROACH.md                     # In-depth technical architecture and design document
-└── README.md                       # Setup, usage, and API guide
+│   ├── ct200_manual.pdf
+│   └── ct200_manual_v2.pdf
+├── main.py                  # FastAPI routes
+├── database.py              # SQLAlchemy engine/session setup
+├── models.py                # ORM models for versions, sections, selections
+├── pdf_parser.py            # CT-200 PDF parsing and hierarchy construction
+├── ingest_manuals.py        # Ingests the supplied manual versions
+├── staleness_service.py     # Current/stale/unknown evaluation
+├── test_generator.py        # Gemini generation and fallback
+├── test_case_store.py       # JSON-backed test-case storage
+├── test_irregularities.py   # Parser irregularity unit tests
+├── test_end_to_end.py       # API and workflow integration tests
+├── check_stale_tests.py     # CLI staleness report
+├── tri9t.db                 # Local SQLite database (created/updated by the app)
+├── test_cases.json          # Generated QA test cases
+├── test_ideas.json          # Supporting generated test ideas
+├── APPROACH.md              # Technical approach
+├── decision_log.md          # Engineering trade-offs
+└── SUBMISSION_EMAIL.md      # Submission email draft
 ```
 
----
+The database and JSON files contain local application state. If starting from a clean clone, follow the setup and ingestion steps below before using the API.
 
-## 4. Setup & Environment Configuration
+## 4. Requirements
 
-### Prerequisites
-- Python 3.11 installed on Windows.
-- Project folder located at `D:\Tri9T_AI_Project`.
+- Windows 10/11
+- Python 3.11 recommended
+- The `data/` directory containing both supplied CT-200 PDF files
+- Optional: Gemini API key for LLM-backed generation. The rule-based fallback is available when the key is not configured or the LLM call fails.
 
-### Dependencies & PYTHONPATH
-Because dependencies are installed locally in the `packages` directory, every script dynamically resolves `PROJECT_DIR / "packages"`. To run external commands or the server, ensure `packages` is accessible:
+## 5. Setup on Windows
 
-```powershell
-# Set PYTHONPATH in PowerShell (if needed)
-$env:PYTHONPATH = "D:\Tri9T_AI_Project\packages"
+Open **Command Prompt** and run:
+
+```bat
+cd /d D:\Tri9T_AI_Project
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-### Secure Gemini API Key Configuration
-Configure your Gemini API key as an environment variable in PowerShell or Windows Command Prompt. **Never hardcode or commit your API key.**
+If the repository does not yet contain `requirements.txt`, install the runtime packages explicitly:
 
-```powershell
-# In PowerShell:
-$env:GEMINI_API_KEY = "your-actual-gemini-api-key"
+```bat
+pip install fastapi uvicorn sqlalchemy "pydantic>=2" pymupdf google-genai httpx
 ```
 
----
+Check Python:
 
-## 5. Ingestion & Re-Ingestion Workflow
+```bat
+python --version
+```
 
-To ingest both manuals into SQLite while preserving full version isolation and populating hierarchy levels, display orders, and content hashes:
+### Optional Gemini configuration
 
-```powershell
+For the current Command Prompt window only:
+
+```bat
+set GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+```
+
+Replace the placeholder with your key. Never put a real key in source code or commit it to Git. If you do not set this variable, generation can use the rule-based fallback.
+
+The model can be overridden with `GEMINI_MODEL` if the configured model is available to your account:
+
+```bat
+set GEMINI_MODEL=your-supported-model-name
+```
+
+Close the terminal or run `set GEMINI_MODEL=` to clear the override for the current session.
+
+## 6. Ingest the manuals
+
+From the project root with the virtual environment activated:
+
+```bat
 python ingest_manuals.py
 ```
 
-To perform a clean, repeatable re-ingestion:
-```powershell
+The pipeline reads the supplied v1 and v2 manuals and persists their sections and version information in SQLite. The expected test run previously reported 27 structured sections for v1 and 28 for v2.
+
+To request a forced refresh using the script's supported option:
+
+```bat
 python ingest_manuals.py --force
 ```
 
----
+Use `--force` only when you intend to refresh the ingested section data for the relevant version. Do not delete the database unless you intentionally want to reset local state.
 
-## 6. Running the API Server
+## 7. Start the API
 
-Start the FastAPI application using Uvicorn:
+In the project root:
 
-```powershell
-python -c "import sys; sys.path.insert(0, r'D:\Tri9T_AI_Project\packages'); import uvicorn; uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=False)"
+```bat
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-- **API Base URL:** `http://127.0.0.1:8000`
-- **Interactive Swagger UI:** `http://127.0.0.1:8000/docs`
+If the command cannot find `uvicorn`, verify that the virtual environment is activated and that dependency installation completed.
 
----
+Open:
 
-## 7. Automated Test Suites
+- API status: http://127.0.0.1:8000/
+- Interactive API documentation: http://127.0.0.1:8000/docs
 
-### Unit Tests: Structural Irregularities
-Validates handling of duplicate headings, missing parent levels, out-of-order sections, and numbered lists in body text:
+Keep this terminal open while using the API. Press `Ctrl+C` to stop the server.
 
-```powershell
+## 8. Suggested end-to-end walkthrough
+
+Use Swagger UI at `http://127.0.0.1:8000/docs` so you can see each request and response.
+
+1. **Inspect imported versions:** call `GET /manuals`.
+2. **Browse sections:** call `GET /manuals/top-level-sections?version=v1` and repeat with `version=v2`.
+3. **Search the manual:** call `GET /manuals/v1/search?q=battery` (try a different query if needed).
+4. **Compare versions:** call `GET /compare`; inspect the change classification and diff summary for changed sections.
+5. **Create a pinned selection:** use `POST /selections` with a body such as:
+
+   ```json
+   {
+     "name": "Inflation and Safety Review",
+     "version": "v1",
+     "section_numbers": ["1.1", "3.2", "4.1"]
+   }
+   ```
+
+   Use section numbers that exist in the chosen manual version. The API response provides the selection ID.
+6. **Inspect the selection:** call `GET /selections/{selection_id}`.
+7. **Generate QA cases:** call `POST /selections/{selection_id}/generate`. Existing cases may be returned unless regeneration is explicitly requested.
+8. **Retrieve cases and staleness:** call `GET /selections/{selection_id}/tests`. Check the status and staleness reason in each returned test record.
+9. **Inspect a node:** call `GET /nodes/{node_id}` and `GET /nodes/{node_id}/changes` using an actual node ID returned by the API.
+
+## 9. Trigger and verify the v1 → v2 flow
+
+The two supplied versions are ingested by the ingestion pipeline:
+
+```bat
+python ingest_manuals.py
+```
+
+Then use the API to compare them:
+
+```text
+GET http://127.0.0.1:8000/compare
+```
+
+For a specific node, use the actual node ID from the API response:
+
+```text
+GET http://127.0.0.1:8000/nodes/{node_id}/changes
+```
+
+Finally, retrieve test cases generated from a v1 selection:
+
+```text
+GET http://127.0.0.1:8000/selections/{selection_id}/tests
+```
+
+The staleness check is performed at retrieval time against the latest stored manual version. A test can remain valid for its original pinned version while being marked stale relative to the latest version. This is a hash-based signal, not a clinical assessment of the significance of each wording change.
+
+## 10. Run the tests
+
+Run these from the project root:
+
+```bat
 python test_irregularities.py
-```
-*Expected result:* 5 tests pass (`OK`).
-
-### Integration Tests: Complete End-to-End Workflow
-Validates browse endpoints, version comparison, version-pinned selection creation, idempotent duplicate submissions, QA test generation, and retrieval-time staleness detection:
-
-```powershell
 python test_end_to_end.py
 ```
-*Expected result:* 12 tests pass (`OK`).
 
-### CLI Staleness Report
-Evaluates all stored test cases directly against the live database:
+The latest recorded successful run produced:
 
-```powershell
+- `test_irregularities.py`: 5 tests passed.
+- `test_end_to_end.py`: 12 tests passed.
+
+The end-to-end test prints a Starlette/httpx deprecation warning in the current environment. That warning did not prevent the tests from passing.
+
+For a staleness report from the command line:
+
+```bat
 python check_stale_tests.py
 ```
 
----
+## 11. API reference
 
-## 8. Complete API Endpoint Reference
-
-### A. Browse & Search Endpoints
-
-| Method | Endpoint | Description |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| `GET` | `/` | API status and sitemap |
-| `GET` | `/manuals` | List all imported manual versions |
-| `GET` | `/manuals/top-level-sections?version=v1` | List top-level root sections for a version (defaults to latest) |
-| `GET` | `/nodes/{node_id}` | Retrieve node by database ID, including children, text, and hash |
-| `GET` | `/nodes/{node_id}/changes` | Determine whether a node changed across versions with diff summary |
-| `GET` | `/manuals/{version}/sections` | List all sections for a manual version |
-| `GET` | `/manuals/{version}/sections/{section_number}` | Retrieve section by section number (e.g. `3.2`) |
-| `GET` | `/manuals/{version}/search?q=battery` | Full-text search across headings and body content |
-| `GET` | `/compare` | Comprehensive version comparison between v1 and v2 |
-
-#### Example: Get Node Changes Across Versions
-`GET http://127.0.0.1:8000/nodes/10/changes`
-```json
-{
-  "node_id": 10,
-  "section_number": "3.2",
-  "heading": "Cuff Inflation Sequence",
-  "source_version": "v1",
-  "target_version": "v2",
-  "has_changed": true,
-  "change_type": "modified",
-  "similarity_ratio": 0.8148,
-  "diff_summary": [
-    "--- v1/3.2",
-    "+++ v2/3.2",
-    "-40 mmHg increments",
-    "+30 mmHg increments"
-  ]
-}
-```
-
----
-
-### B. Selection API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
+| `GET` | `/` | API status |
+| `GET` | `/manuals` | List ingested versions |
+| `GET` | `/manuals/top-level-sections?version=v1` | List top-level sections |
+| `GET` | `/nodes/{node_id}` | Retrieve a node and its details |
+| `GET` | `/nodes/{node_id}/changes` | Compare a node across versions |
+| `GET` | `/manuals/{version}/sections` | List sections for a version |
+| `GET` | `/manuals/{version}/sections/{section_number}` | Get a section by section number |
+| `GET` | `/manuals/{version}/search?q=battery` | Search section headings and content |
+| `GET` | `/compare` | Compare manual versions |
 | `POST` | `/selections` | Create a named, version-pinned selection |
-| `GET` | `/selections` | List all saved named selections |
-| `GET` | `/selections/{selection_id}` | Retrieve selection details with pinned text and hashes |
+| `GET` | `/selections` | List selections |
+| `GET` | `/selections/{selection_id}` | Retrieve a selection and pinned items |
+| `POST` | `/selections/{selection_id}/generate` | Generate QA test cases |
+| `GET` | `/selections/{selection_id}/tests` | Retrieve test cases and staleness |
+| `GET` | `/nodes/{node_id}/tests` | Retrieve tests linked to a node |
+| `GET` | `/stale-tests` | Audit test cases against the latest version |
 
-#### Example: Create Version-Pinned Selection
-`POST http://127.0.0.1:8000/selections`
-```json
-{
-  "name": "Inflation & Overpressure Review",
-  "version": "v1",
-  "section_numbers": ["1.1", "3.2", "4.1"]
-}
-```
+## 12. Design limitations
 
-*Duplicate Submission Policy:*
-- If identical section numbers are posted with the same name and version, the API returns the existing selection with `"status": "existing"` (idempotent).
-- If different section numbers are posted under an existing selection name, the API returns `409 Conflict`.
+- Matching primarily relies on logical section identifiers and content hashes; renumbered or moved sections can be misclassified.
+- Hash-based staleness treats all content changes as changes; it does not determine whether a change is clinically significant.
+- The parser is designed for the supplied CT-200 manual layout, not arbitrary PDFs.
+- LLM output is not treated as authoritative. It is validated, and the rule-based fallback is used when generation is unavailable or unsuitable.
+- This is an internship assignment prototype, not a validated medical-device software product.
 
----
+## 13. Related documentation
 
-### C. LLM QA Generation Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/selections/{selection_id}/generate` | Generate 3–5 QA test cases from the selection's pinned requirements |
-
-Optional query parameter: `?force_regenerate=true` (defaults to false to prevent accidental overwrite of existing generations).
-
----
-
-### D. Retrieval & Staleness Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/selections/{selection_id}/tests` | Fetch generated test cases by selection ID with live staleness |
-| `GET` | `/nodes/{node_id}/tests` | Fetch test cases tracing back to a specific node ID |
-| `GET` | `/stale-tests` | Global audit view of all test cases against the latest manual |
-
-#### Example: Retrieval with Staleness
-`GET http://127.0.0.1:8000/selections/1/tests`
-```json
-{
-  "selection_id": 1,
-  "selection_name": "Inflation & Overpressure Review",
-  "pinned_version": "v1",
-  "total_tests": 3,
-  "current_tests": 2,
-  "stale_tests": 1,
-  "unknown_tests": 0,
-  "tests": [
-    {
-      "test_id": "d5f17d85",
-      "section_number": "3.2",
-      "source_heading": "Cuff Inflation Sequence",
-      "source_version": "v1",
-      "source_hash": "d96ca6eb...",
-      "test_case": "Verify cuff inflation sequence for Section 3.2...",
-      "expected_result": "Device inflates in 40 mmHg increments above 180 mmHg...",
-      "status": "STALE",
-      "valid_for_pinned_version": true,
-      "staleness_reason": "Content fingerprint changed in latest version 'v2' (pinned hash: d96ca6eb..., current hash: 438c5892...)."
-    },
-    {
-      "test_id": "993b8714",
-      "section_number": "1.1",
-      "source_heading": "Intended Use",
-      "source_version": "v1",
-      "status": "CURRENT",
-      "valid_for_pinned_version": true,
-      "staleness_reason": "Content fingerprint is identical to latest version 'v2'."
-    }
-  ]
-}
-```
-
----
-
-## 9. Design Decisions & Limitations
-
-For complete technical justifications, refer to:
-- [`APPROACH.md`](APPROACH.md): Full data model, PDF irregularity handling, matching algorithm, LLM prompt design, and future roadmap.
-- [`decision_log.md`](decision_log.md): Explicit answers to the three core engineering questions:
-  1. What part is most likely to silently give wrong results (Section renumbering / moves across versions) and how to catch it.
-  2. Where simplicity was chosen over correctness (Binary SHA-256 hash staleness vs clinical parameter AST extraction).
-  3. Unhandled inputs (Multi-column magazine-style PDF page layouts).
+- [`APPROACH.md`](APPROACH.md): architecture, parsing, version matching, generation, and limitations.
+- [`decision_log.md`](decision_log.md): direct answers to the three required engineering questions.
+- [`SUBMISSION_EMAIL.md`](SUBMISSION_EMAIL.md): submission email draft.
